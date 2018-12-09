@@ -59,6 +59,12 @@ def test():
         task_queue.put('STOP')
 
 
-if __name__ == '__main__':
+def main():
     freeze_support()
     test()
+
+
+if __name__ == '__main__':
+    main()
+
+    
