@@ -3,6 +3,9 @@ import random
 import argparse
 import requests
 import logging
+import sys
+import os
+import signal
 
 from multiprocessing import Process, Queue, current_process, freeze_support
 from bs4 import BeautifulSoup
@@ -10,6 +13,7 @@ from bs4 import BeautifulSoup
 # global variables
 DOMAIN_LIST = [
     'google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com']
+PIDS = []
 
 # commandline options
 def usage():
@@ -21,6 +25,8 @@ def worker(input, output):
     for func, args in iter(input.get, 'STOP'):
         result = calculate(func, args)
         output.put(result)
+        logging.basicConfig(filename='test.log', level=logging.INFO)
+        logging.info('\t' + output.get())
 
 # function to add a domain name
 def add_domain(domain):
@@ -34,55 +40,45 @@ def add_domain(domain):
 # function used to calculate result
 def calculate(func, args):
     result = func(args)
-    return '{} says that {} {} = {}'.format(current_process().name, func.__name__, args, result)
+    return '{}:{}:{} contains links to - {}'.format(current_process().name, func.__name__, args, result)
 
 # functions referenced by tasks
 def get_url(url):
     r = requests.get('https://' + url)
-    return r
-    
-
+    soup = BeautifulSoup(r.text, 'html.parser')
+    links = []
+    for link in soup.find_all('a'):
+        links.append(link.get('href'))
+    return links  
 
 def test():
     global DOMAIN_LIST
+    global PIDS
     NUMBER_OF_PROCESSES = 4
     TASKS1 = [(get_url, (domain)) for domain in DOMAIN_LIST]
-    # TASKS2 = [(plus, (i, 8)) for i in range(10)]
-
     # create queues
-    task_queue = Queue()
-    done_queue = Queue()
-
+    TASK_QUEUE = Queue()
+    DONE_QUEUE = Queue()
+    
     # submit tasks
     for task in TASKS1:
-        task_queue.put(task)
+        TASK_QUEUE.put(task)
 
     # start worker processes
     for i in range(NUMBER_OF_PROCESSES):
-        Process(target=worker, args=(task_queue, done_queue)).start()
-
-    # get and print results
-    for i in range(len(TASKS1)):
-        logging.basicConfig(filename='test.log', level=logging.DEBUG)
-        logging.debug('\t' + done_queue.get())
-        # print('\t', done_queue.get())
-
-    # add more tasks using `put()`
-    # for task in TASKS2:
-    #     task_queue.put(task)
-
-    # get and print some more results
-    # for i in range(len(TASKS2)):
-    #     print('\t', done_queue.get())
-
+        P = Process(target=worker, args=(TASK_QUEUE, DONE_QUEUE))
+        P.start()
+        PIDS.append(P.pid)
+    
     # tell child processes to stop
     for i in range(NUMBER_OF_PROCESSES):
-        task_queue.put('STOP')
+        TASK_QUEUE.put('STOP')
+    
 
 # function to display menu options
 def menu_list():
     global DOMAIN_LIST
-
+    print(PIDS)
     try:
         print('\033[1;36;40mPlease choose from the following options:')
         print('\n1. Add a domain name to queue (do not include https:// or http://')
@@ -106,8 +102,12 @@ def menu_list():
             test()
             menu_list()
         if selection == 4:
-            test_file = open('test.log', 'r')
-            print(test_file)
+            print(PIDS)
+            for pid in range(len(PIDS) - 1):
+                os.kill(pid, signal.SIGTERM)
+                print('killed: ', pid)
+                PIDS.remove(pid)
+            menu_list()
         if selection == 5:
             print('\n\033[1;37;41mByeeeee!')
             exit()
