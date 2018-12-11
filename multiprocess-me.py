@@ -2,14 +2,14 @@ import time
 import random
 import argparse
 import requests
+import logging
 
 from multiprocessing import Process, Queue, current_process, freeze_support
 from bs4 import BeautifulSoup
 
 # global variables
-DOMAIN_LIST = ['google.com', 'devleague.com']
-START_QUEUE = False
-STOP_QUEUE = False
+DOMAIN_LIST = [
+    'google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com']
 
 # commandline options
 def usage():
@@ -34,22 +34,11 @@ def add_domain(domain):
 # function used to calculate result
 def calculate(func, args):
     result = func(args)
-    print('func name: ', func.__name__)
-    print('args: ', args)
     return '{} says that {} {} = {}'.format(current_process().name, func.__name__, args, result)
 
 # functions referenced by tasks
-def mul(a, b):
-    time.sleep(0.5*random.random())
-    return a * b
-
-def plus(a, b):
-    time.sleep(0.5*random.random())
-    return a + b
-
 def get_url(url):
     r = requests.get('https://' + url)
-    print('r: ', r)
     return r
     
 
@@ -59,7 +48,6 @@ def test():
     NUMBER_OF_PROCESSES = 4
     TASKS1 = [(get_url, (domain)) for domain in DOMAIN_LIST]
     # TASKS2 = [(plus, (i, 8)) for i in range(10)]
-    print('tasks1: ', TASKS1)
 
     # create queues
     task_queue = Queue()
@@ -74,9 +62,10 @@ def test():
         Process(target=worker, args=(task_queue, done_queue)).start()
 
     # get and print results
-    print('Unordered results:')
     for i in range(len(TASKS1)):
-        print('\t', done_queue.get())
+        logging.basicConfig(filename='test.log', level=logging.DEBUG)
+        logging.debug('\t' + done_queue.get())
+        # print('\t', done_queue.get())
 
     # add more tasks using `put()`
     # for task in TASKS2:
@@ -116,6 +105,9 @@ def menu_list():
             freeze_support()
             test()
             menu_list()
+        if selection == 4:
+            test_file = open('test.log', 'r')
+            print(test_file)
         if selection == 5:
             print('\n\033[1;37;41mByeeeee!')
             exit()
