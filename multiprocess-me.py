@@ -78,7 +78,7 @@ def test():
 # function to display menu options
 def menu_list():
     global DOMAIN_LIST
-    print(PIDS)
+
     try:
         print('\033[1;36;40mPlease choose from the following options:')
         print('\n1. Add a domain name to queue (do not include https:// or http://')
@@ -102,10 +102,9 @@ def menu_list():
             test()
             menu_list()
         if selection == 4:
-            print(PIDS)
-            for pid in range(len(PIDS) - 1):
+            for pid in PIDS[:]:
                 os.kill(pid, signal.SIGTERM)
-                print('killed: ', pid)
+                print('process terminated: ', pid)
                 PIDS.remove(pid)
             menu_list()
         if selection == 5:
