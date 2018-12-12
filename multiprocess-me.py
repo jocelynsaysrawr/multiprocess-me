@@ -1,6 +1,3 @@
-import time
-import random
-import argparse
 import requests
 import logging
 import sys
@@ -12,13 +9,8 @@ from bs4 import BeautifulSoup
 
 # global variables
 DOMAIN_LIST = [
-    'google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com','google.com', 'devleague.com']
+    'https://google.com', 'https://devleague.com','https://reddit.com', 'https://digitalocean.com','https://github.com', 'https://facebook.com','https://twitter.com', 'https://freecodecamp.org','https://medium.com', 'https://docs.python.org','https://amazon.com', 'https://console.aws.amazon.com', 'https://linkedin.com','https://repl.it', 'https://www.ainafinda.com','http://turtles.com', 'https://namecheap.com','https://godaddy.com', 'https://slack.com','https://glitch.com', 'https://codeburst.io','https://thisiswhyimbroke.com', 'https://cnn.com','https://yahoo.com', 'https://lifetime.com', 'https://ibm.com','https://bugcrowd.com', 'https://hackerone.com','https://skyscanner.com', 'https://twilio.com','https://en.wikipedia.org', 'https://businesswire.com','https://apple.com', 'https://pinterest.com','https://jet.com', 'https://www.trello.com', 'https://boh.com','https://hawaiianairlines.com']
 PIDS = []
-
-# commandline options
-def usage():
-    parser = argparse.ArgumentParser(description='Multiprocess Me: Performance Optimized Web Scraper')
-    args = parser.parse_args()
 
 # function run by worker processes
 def worker(input, output):
@@ -44,7 +36,8 @@ def calculate(func, args):
 
 # functions referenced by tasks
 def get_url(url):
-    r = requests.get('https://' + url)
+    global DOMAIN_LIST
+    r = requests.get(url)
     soup = BeautifulSoup(r.text, 'html.parser')
     links = []
     for link in soup.find_all('a'):
@@ -78,11 +71,10 @@ def test():
 # function to display menu options
 def menu_list():
     global DOMAIN_LIST
-
     try:
         print('\033[1;36;40mPlease choose from the following options:')
-        print('\n1. Add a domain name to queue (do not include https:// or http://')
-        print('2. View list of domains in queue')
+        print('\n1. Add a domain name to queue (must include https:// or http://)')
+        print('2. View list of domains')
         print('3. Start processing domain queue')
         print('4. Stop processing domain queue')
         print('5. Exit')
@@ -116,8 +108,6 @@ def menu_list():
 
 
 def main():
-    get_url('google.com')
-    usage()
     menu_list()
 
 
